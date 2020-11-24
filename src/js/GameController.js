@@ -1,7 +1,7 @@
-import GamePlay from './GamePlay'
-import GameState from './GameState'
-import GameStateService from './GameStateService'
-import themes from './themes'
+import GamePlay from './GamePlay';
+import GameState from './GameState';
+import GameStateService from './GameStateService';
+import themes from './themes';
 import {characterGenerator, generateTeam} from './generators'
 import Character from './Character';
 import Bowman from './Bowman';
@@ -12,6 +12,7 @@ import Daemon from './Daemon';
 import Undead from './Undead';
 import Team from './Team';
 import cursors from './cursors';
+import {myAllowedTypes, enemyAllowedTypes} from './allowedTypes';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -24,6 +25,9 @@ export default class GameController {
     this.gameStateService = new GameStateService(localStorage);
     this.gamePlay.drawUi(themes[this.gameState.level - 1]);
     this.gamePlay.redrawPositions(this.gameState.bothTeams);
+    this.gamePlay.cellClickListeners = [];
+    this.gamePlay.cellEnterListeners = [];
+    this.gamePlay.cellLeaveListeners = [];
     this.gamePlay.addCellEnterListener(e => this.onCellEnter(e));
     this.gamePlay.addCellLeaveListener(e => this.onCellLeave(e));
     this.gamePlay.addCellClickListener(e => this.onCellClick(e));
@@ -38,8 +42,8 @@ export default class GameController {
 
   onLoadGameClick() {
     this.gameState = this.gameStateService.load();
+    this.gameState.bothTeams = this.gameState.myTeam.concat(this.gameState.enemyTeam);
     this.gamePlay.redrawPositions(this.gameState.bothTeams);
-    console.log(this.gameStateService);
   }
 
   onCellClick(index) {
@@ -249,12 +253,12 @@ nextLevel() {
       this.gamePlay.drawUi(themes[this.gameState.level - 1]);
       let newMembers
       if (this.gameState.level === 2) {
-        newMembers = generateTeam(this.gameState.myAllowedTypes, 1, 1);
+        newMembers = generateTeam(myAllowedTypes, 1, 1);
       } else {
-        newMembers = generateTeam(this.gameState.myAllowedTypes, this.gameState.level - 1, 2);
+        newMembers = generateTeam(myAllowedTypes, this.gameState.level - 1, 2);
       }
       this.gameState.myTeam = this.gameState.myTeam.concat(newMembers);
-      this.gameState.enemyTeam = generateTeam(this.gameState.enemyAllowedTypes, this.gameState.level, this.gameState.myTeam.length);
+      this.gameState.enemyTeam = generateTeam(enemyAllowedTypes, this.gameState.level, this.gameState.myTeam.length);
       this.gameState.bothTeams = this.gameState.myTeam.concat(this.gameState.enemyTeam);
       this.gamePlay.redrawPositions(this.gameState.bothTeams);
       this.gameState.myTurn;
